@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xsi:schemaLocation="
+      http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+      http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+ 
+    <munit:config name="employee-api-test-suite.xml"/>
+ 
+    <munit:test
+        name="happy-path-test"
+        description="Happy Path Test">
+ 
+        <!-- Mock HTTP Request -->
+        <munit:behavior>
+ 
+            <munit-tools:mock-when processor="http:request">
+ 
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute
+                        attributeName="doc:name"
+                        whereValue="Request"/>
+                </munit-tools:with-attributes>
+ 
+                <munit-tools:then-return>
+ 
+                    <munit-tools:payload
+                        value='#[{
+                            id: 1,
+                            name: "John"
+                        }]'/>
+ 
+                </munit-tools:then-return>
+ 
+            </munit-tools:mock-when>
+ 
+        </munit:behavior>
+ 
+        <!-- Execute Flow -->
+        <munit:execution>
+ 
+            <munit:set-event>
+ 
+                <munit:attributes value='#[{
+                    uriParams: {
+                        id: "1001"
+                    }
+                }]'/>
+ 
+            </munit:set-event>
+ 
+            <flow-ref name="employee-apiFlow"/>
+ 
+        </munit:execution>
+ 
+        <!-- Assertions -->
+        <munit:validation>
+ 
+            <munit-tools:assert-that
+                expression="#[payload.status]"
+                is='#[MunitTools::equalTo("SUCCESS")]'/>
+ 
+            <munit-tools:assert-that
+                expression="#[payload.employee.id]"
+                is='#[MunitTools::equalTo(1)]'/>
+ 
+            <munit-tools:assert-that
+                expression="#[payload.employee.name]"
+                is='#[MunitTools::equalTo("John")]'/>
+ 
+        </munit:validation>
+ 
+    </munit:test>
+    
+    <munit:test
+    name="negative-test"
+    description="Validation Failure Test" >
+ 
+    <munit:execution>
+ 
+        <munit:set-event>
+ 
+            <munit:attributes value='#[{
+                uriParams: {
+                    id: ""
+                }
+            }]'/>
+ 
+        </munit:set-event>
+ 
+        <flow-ref name="employee-apiFlow"/>
+ 
+    </munit:execution>
+ 
+    <munit:validation>
+ 
+        <munit-tools:assert-that
+            expression="#[payload.status]"
+            is='#[MunitTools::equalTo("FAILED")]'/>
+ 
+        <munit-tools:assert-that
+            expression="#[payload.message]"
+            is='#[MunitTools::equalTo("Employee Id is mandatory")]'/>
+ 
+    </munit:validation>
+ 
+</munit:test>
+ 
+<munit:test name="exception-test">
+ 
+    <munit:behavior>
+ 
+        <munit-tools:mock-when processor="http:request">
+ 
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="Request"/>
+            </munit-tools:with-attributes>
+ 
+            <munit-tools:then-return>
+                <munit-tools:payload value="#[null]"/>
+            </munit-tools:then-return>
+ 
+        </munit-tools:mock-when>
+ 
+    </munit:behavior>
+ 
+    <munit:execution>
+ 
+        <munit:set-event>
+            <munit:attributes value='#[{
+                uriParams : {
+                    id : "1001"
+                }
+            }]'/>
+        </munit:set-event>
+ 
+        <flow-ref name="employee-apiFlow"/>
+ 
+    </munit:execution>
+ 
+    <munit:validation>
+ 
+        <munit-tools:assert-that
+            expression="#[payload.status]"
+            is='#[MunitTools::equalTo("SUCCESS")]'/>
+ 
+    </munit:validation>
+ 
+</munit:test>
+ 
+</mule>

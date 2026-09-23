@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+      http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+      http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+ 
+    <!-- HTTP Listener Config -->
+    <http:listener-config name="HTTP_Listener_config"
+                          doc:name="HTTP Listener config">
+        <http:listener-connection host="0.0.0.0"
+                                  port="8081"/>
+    </http:listener-config>
+ 
+    <!-- HTTP Request Config -->
+    <http:request-config name="Employee_API"
+                         doc:name="HTTP Request configuration">
+        <http:request-connection host="jsonplaceholder.typicode.com"
+                                 port="80"/>
+    </http:request-config>
+ 
+    <!-- Main Flow -->
+	<flow name="employee-apiFlow">
+ 
+        <http:listener doc:name="Listener"
+                       config-ref="HTTP_Listener_config"
+                       path="/employee/{id}"/>
+ 
+        <set-variable variableName="employeeId"
+                      value="#[attributes.uriParams.id]"
+                      doc:name="Set Variable"/>
+ 
+        <validation:is-true
+                doc:name="Is true"
+                expression="#[vars.employeeId != null and vars.employeeId != '']"
+                message="Employee Id is mandatory"/>
+ 
+        <http:request doc:name="Request"
+                      config-ref="Employee_API"
+                      method="GET"
+                      path="/users/1"/>
+ 
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    status: "SUCCESS",
+    employee: payload
+}
+                ]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+ 
+        <!-- Error Handler -->
+        <error-handler>
+ 
+            <on-error-continue type="VALIDATION:*"
+                               logException="true"
+                               enableNotifications="true">
+ 
+                <ee:transform doc:name="Validation Error Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[
+%dw 2.0
+output application/json
+---
+{
+    status: "FAILED",
+    message: "Employee Id is mandatory"
+}
+                        ]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+ 
+            </on-error-continue>
+ 
+        </error-handler>
+ 
+    </flow>
+ 
+</mule>
