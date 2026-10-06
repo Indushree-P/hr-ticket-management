@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.mycompany</groupId>
-	<artifactId>munit-demooo</artifactId>
-	<version>1.0.0</version>
+	<artifactId>hr-ticket-papi</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>mule-application</packaging>
 
-	<name>munit-demooo</name>
+	<name>hr-ticket-papi</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,75 +15,20 @@
 
 		<app.runtime>4.12.2</app.runtime>
 		<mule.maven.plugin.version>4.10.1</mule.maven.plugin.version>
-		<munit.version>3.7.3</munit.version>
 	</properties>
 
 	<build>
 		<plugins>
 			<plugin>
-
-				<groupId>org.mule.tools.maven</groupId>
-
-				<artifactId>mule-maven-plugin</artifactId>
-
-				<version>${mule.maven.plugin.version}</version>
-
-				<extensions>true</extensions>
-
-				<configuration>
-
-					<cloudhub2Deployment>
-
-						<uri>https://anypoint.mulesoft.com</uri>
-
-						<username>${anypoint.username}</username>
-
-						<password>${anypoint.password}</password>
-
-						<provider>MC</provider>
-
-						<environment>Sandbox</environment>
-
-						<applicationName>employee-api</applicationName>
-
-						<target>Cloudhub-US-East-1</target>
-
-						<muleVersion>4.12.2</muleVersion>
-
-						<javaVersion>17</javaVersion>
-
-						<replicas>1</replicas>
-
-						<vCores>0.1</vCores>
-
-					</cloudhub2Deployment>
-
-					<classifier>---- select project type ----</classifier>
-				</configuration>
-
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.2.0</version>
 			</plugin>
 			<plugin>
-				<groupId>com.mulesoft.munit.tools</groupId>
-				<artifactId>munit-maven-plugin</artifactId>
-				<version>${munit.version}</version>
-				<executions>
-					<execution>
-						<id>test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-							<goal>coverage-report</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<coverage>
-						<runCoverage>true</runCoverage>
-						<formats>
-							<format>html</format>
-						</formats>
-					</coverage>
-				</configuration>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>mule-maven-plugin</artifactId>
+				<version>${mule.maven.plugin.version}</version>
+				<extensions>true</extensions>
 			</plugin>
 		</plugins>
 	</build>
@@ -102,29 +47,28 @@
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>
-			<groupId>com.mulesoft.munit</groupId>
-			<artifactId>munit-runner</artifactId>
-			<version>3.7.3</version>
-			<classifier>mule-plugin</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.mulesoft.munit</groupId>
-			<artifactId>munit-tools</artifactId>
-			<version>3.7.3</version>
-			<classifier>mule-plugin</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mule.weave</groupId>
-			<artifactId>assertions</artifactId>
-			<version>1.2.1</version>
-			<scope>test</scope>
+			<groupId>a800e192-e208-4c3c-9e10-977416e56127</groupId>
+			<artifactId>hr-ticket-papi</artifactId>
+			<version>1.0.0</version>
+			<classifier>raml</classifier>
+			<type>zip</type>
 		</dependency>
 		<dependency>
 			<groupId>org.mule.modules</groupId>
-			<artifactId>mule-validation-module</artifactId>
-			<version>2.0.10</version>
+			<artifactId>mule-apikit-module</artifactId>
+			<version>1.12.2</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-vm-connector</artifactId>
+			<version>2.0.2</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-file-connector</artifactId>
+			<version>1.5.6</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 	</dependencies>

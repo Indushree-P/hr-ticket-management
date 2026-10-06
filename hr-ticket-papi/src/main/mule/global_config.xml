@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:request-config name="sapi-http-request-config" doc:name="HTTP Request configuration" doc:id="f4ce60df-4ac5-4479-937e-a1f220729c43" >
+		<http:request-connection host="localhost" port="8081"/>
+	</http:request-config>
+	<vm:config name="audit-vm-config" doc:name="VM Config" doc:id="05ddd5fd-d144-46de-b6d8-2039ff85b98a">
+		<vm:queues >
+			<vm:queue queueName="audit-queue" maxOutstandingMessages="1000" />
+		</vm:queues>
+	</vm:config>
+	<file:config name="audit-file-config" doc:name="File Config" doc:id="3499fae4-eac5-4be1-a651-040c2d9d26fb" >
+		<file:connection workingDir="C:\Users\inp" />
+	</file:config>
+</mule>
