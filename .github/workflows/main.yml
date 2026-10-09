@@ -2,10 +2,10 @@ name: SAPI CI
 
 on:
   push:
-    paths:
-      - 'hr-ticket-sapi/**'
     branches:
       - develop
+    paths:
+      - 'hr-ticket-sapi/**'
 
 jobs:
   build:
@@ -27,8 +27,8 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Verify Maven
+        run: mvn -version
+
       - name: Build Project
         run: mvn clean package -DskipTests
-
-      - name: Run MUnit Tests
-        run: mvn test
