@@ -10,23 +10,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: hr-ticket-sapi
-
     steps:
 
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: List Files
+        run: pwd && ls -R
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Verify Maven
-        run: mvn -version
-
-      - name: Build Project
-        run: mvn clean package -DskipTests
