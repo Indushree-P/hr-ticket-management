@@ -31,4 +31,4 @@ jobs:
 
       - name: Build Mule Application
         working-directory: ./accounts-api
-        run: mvn clean package
+        run: mvn clean package -Dmule.key=${{ secrets.MULE_KEY }}
