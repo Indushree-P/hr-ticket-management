@@ -1,0 +1,34 @@
+name: SAPI CI
+
+on:
+  push:
+    paths:
+      - 'hr-ticket-sapi/**'
+    branches:
+      - develop
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: hr-ticket-sapi
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build Project
+        run: mvn clean package -DskipTests
+
+      - name: Run MUnit Tests
+        run: mvn test
