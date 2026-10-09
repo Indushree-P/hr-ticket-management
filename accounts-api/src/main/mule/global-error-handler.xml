@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="Global_Error_Handler" doc:id="b28a9e73-9268-48ac-bb24-6af381576ae1" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f46d89db-000d-4b2d-aa96-9932fffeccb0" type="VALIDATION:*">
+			<set-variable value="#[400]" doc:name="Variable for httpStatus" doc:id="b013c3ec-7d1d-4d25-b7ad-cc7bc9b0eadd" variableName="httpStatus"/>
+			<ee:transform doc:name="Transform Message" doc:id="393af92d-2b17-47e2-b56d-4a89c6ff08c9" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    statusCode: vars.httpStatus,
+    errorType: error.errorType.identifier,
+    errorDescription: error.description splitBy "\n",
+    correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0f52600d-91f6-47bc-a855-a79e3b510e52" type="DB:*">
+			<set-variable value="#[500]" doc:name="Variable for httpStatus" doc:id="ec584477-3350-42d5-9340-c9f216cf7fef" variableName="httpStatus"/>
+			<ee:transform doc:name="Transform Message" doc:id="8c7d599e-08b7-43bd-a73a-d215baec0547" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    statusCode: vars.httpStatus,
+    errorType: error.errorType.identifier,
+    errorDescription: error.description splitBy "\n",
+    correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="9b1b2979-12fc-48aa-ac74-2f3f352f6603" type="ANY:*">
+			<set-variable value="#[500]" doc:name="Variable for httpStatus" doc:id="a43ff41f-44a0-4542-bbf4-3c5efb48cf1b" variableName="httpStatus"/>
+			<ee:transform doc:name="Transform Message" doc:id="4abd06f9-618e-46e4-b7f3-fe24f26dd493" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  code: 500,
+  message: "Internal Server Error"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-continue>
+	</error-handler>
+</mule>

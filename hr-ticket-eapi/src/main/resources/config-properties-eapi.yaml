@@ -1,0 +1,6 @@
+papi:
+  host: localhost
+  port: "8082"
+  
+pathss:
+  process-ticket: /api/process-ticket

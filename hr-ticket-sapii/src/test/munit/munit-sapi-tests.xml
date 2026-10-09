@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<munit:config name="munit-sapi-tests.xml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="857cf385-a1b5-4e01-9114-7413fbddcdf6" file="config_properties-test.yaml" />
+	<secure-properties:config name="Secure_Properties_Config1" doc:name="Secure Properties Config" doc:id="02bedd3b-d7a0-4f44-8058-940145adc6d2" file="secure-properties-test.yaml" key="${mule.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<munit:test name="AI-SAPI-Test" doc:id="85dc90b8-7850-428a-a150-a5d8cf7d4721" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock groq api" doc:id="dacc8d8e-2822-4c6d-b7a8-8d7d2edfe69e" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="invoke-groq-api" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  choices: [&#10;    {&#10;      message: {&#10;        content: "{\"sentiment\":\"NEGATIVE\",\"priority\":\"CRITICAL\",\"isIssueTypeValid\":true}"&#10;      }&#10;    }&#10;  ]&#10;}]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set input" doc:id="2835c142-8e64-4cc3-8cd9-2f57464f5fb6" >
+				<munit:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  issueType: "Payroll",&#10;  description: "Salary not credited this month"&#10;}]' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="4349cdca-f111-4f13-95b1-8b25644e24da" name="post:\ai\priority:application\json:hr-ticket-sapi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="validate sentiment" doc:id="315d274a-cbc6-455f-9dc6-e71db65ede6c" expression="#[payload.sentiment]" is='#[MunitTools::equalTo("NEGATIVE")]'/>
+			<munit-tools:assert-that doc:name="validate priority" doc:id="f8e439f2-0ba6-49ee-b28b-c62d79dc1951" expression="#[payload.priority]" is='#[MunitTools::equalTo("CRITICAL")]'/>
+			<munit-tools:assert-that doc:name="validate issueType" doc:id="95808efc-aa00-47cd-84d0-9bf626b76b65" expression="#[payload.isIssueTypeValid]" is="#[MunitTools::equalTo(true)]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="alert-sapi-test">
+
+    <munit:behavior>
+
+        <munit-tools:mock-when
+            doc:name="Mock Email Send"
+            processor="email:send">
+
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="send-critical-alert-email"/>
+            </munit-tools:with-attributes>
+
+        </munit-tools:mock-when>
+
+    </munit:behavior>
+
+    <munit:execution>
+
+        <munit:set-event>
+
+            <munit:payload
+                mediaType="application/json"
+                value='#[%dw 2.0
+output application/json
+---
+{
+    ticketId: "TKT1001",
+    department: "HR",
+    priority: "CRITICAL",
+    description: "Payroll deductions are incorrect"
+}]'/>
+
+        </munit:set-event>
+
+        <flow-ref
+            name="post:\alerts:application\json:hr-ticket-sapi-config"/>
+
+    </munit:execution>
+
+    <munit:validation>
+
+        <munit-tools:assert-that
+            doc:name="Assert Alert Sent"
+            expression="#[payload.alertSent]"
+            is='#[MunitTools::equalTo(true)]'/>
+
+        <munit-tools:verify-call
+            doc:name="Verify Email Called"
+            processor="email:send"
+            times="1">
+
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="send-critical-alert-email"/>
+            </munit-tools:with-attributes>
+
+        </munit-tools:verify-call>
+
+    </munit:validation>
+
+</munit:test>
+	<munit:test name="DB-SAPI-Test" doc:id="34fb49d5-8b99-4c79-8d26-621d729b176f" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock db sapi" doc:id="4d13b919-c4c3-4102-9421-95f9c6022507" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="insert-ticket-record" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  ticketId: "TKT1001",&#10;  employeeId: "EMP001",&#10;  department: "HR",&#10;  issueType: "Payroll",&#10;  description: "Salary not credited",&#10;  sentiment: "NEGATIVE",&#10;  priority: "CRITICAL"&#10;}]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set input" doc:id="7f74f128-da7c-40b6-9ce2-8f4f488e5409" >
+				<munit:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  ticketId: "TKT1001",&#10;  employeeId: "EMP001",&#10;  department: "HR",&#10;  issueType: "Payroll",&#10;  description: "Salary not credited",&#10;  sentiment: "NEGATIVE",&#10;  priority: "CRITICAL"&#10;}]' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="flow referring to db sapi" doc:id="a0c5e2b8-df60-4029-b2d6-6e90c2e381c3" name="post:\tickets:application\json:hr-ticket-sapi-config" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="validate insertion" doc:id="92385a8e-147d-4480-96f3-26d9f8c93a2c" is='#[MunitTools::equalTo("SUCCESS")]' expression="#[payload.status]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="munit-papi-api-main" doc:id="64a7e0a0-558d-4ef9-977f-896c1d4525bd" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="282b4685-fac5-4e02-b978-8370f796b69c" processor="apikit:router" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="APIkit Router" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow Reference" doc:id="2c986016-3e5e-44ff-864b-02196fea17c3" name="hr-ticket-sapi-main" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="bdac5353-0e52-40a8-ba34-e3025fd2c13e" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="munit-papi-apiconsole" doc:id="bcad4e10-01b8-443a-9486-c55bde0e0f66" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="a7aeef3d-8b4e-4745-82d1-418944c60317" processor="apikit:console" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="APIkit Console" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow Reference" doc:id="c21ee00b-cefa-4a7d-82a5-b0751b2c59c8" name="hr-ticket-sapi-console" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="4abec5ea-ca3d-4150-a993-14b8852a279d" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

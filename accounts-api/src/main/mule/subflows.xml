@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="36655ae3-8116-42b3-a3cb-f4003ef456e6"/>
+	<validation:config name="Validation_Config1" doc:name="Validation Config" doc:id="4057f61d-9298-4279-a468-79a6888322f6"/>
+	<validation:config name="Validation_Config2" doc:name="Validation Config" doc:id="3b417f6a-e6f0-4abe-ada9-6c6e05655d79"/>
+	<sub-flow name="validate-account-request-subflow" doc:id="35eb28c8-8b8a-4158-85d9-941cf7c65098" >
+		<validation:all doc:name="All" doc:id="4728d0be-fd2c-4fa6-a46f-4f5f06e6b500" >
+			<validation:is-not-blank-string doc:name="Name_validation" doc:id="ff1c3baf-0780-4b36-8644-c83505648bd3" value="#[payload.name]" message="Name cannot be empty" />
+			<validation:matches-regex doc:name="Phone_Number_validation" doc:id="63b707c0-8d86-4605-8b77-c6f6895d3d78" value="#[payload.phone]" regex="^[0-9]{10}$" message="Phone number must contain exactly 10 digits" />
+			<validation:matches-regex doc:name="Email_validation" doc:id="04a4118c-3cb7-416e-9b0d-ba30416cbff1" value="#[payload.email]" regex="^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$" message="Invalid Email Format" />
+			<validation:is-true doc:name="Username_validation" doc:id="ed2a048d-b0da-455f-87a4-af072e13a222" config-ref="Validation_Config" message="Username cannot be more than 10 characters" expression="#[sizeOf(payload.username) &lt;= 10]" />
+			<validation:is-true doc:name="Password_validation" doc:id="fbfbee2e-fbe8-4c4f-9540-b29f4c941fd4" config-ref="Validation_Config1" message="Password cannot be more than 10 characters" expression="#[sizeOf(payload.password) &lt;= 10]" />
+			<validation:is-true doc:name="Account_Type_validation" doc:id="8fb48a35-e3f7-4798-9191-29a04b383261" config-ref="Validation_Config2" message="Account Type must be either Tier I or Tier II" expression='#[(payload.accountType == "Tier I") or (payload.accountType == "Tier II")]' />
+		</validation:all>
+	</sub-flow>
+	<sub-flow name="insert_request_Flow" doc:id="0371998b-75ad-434a-86b3-5dee3b3e3738" >
+		<try doc:name="Try" doc:id="490118bc-39e5-4b7c-b52f-18c87479cdbf" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="USERS" doc:id="73e3f23f-2b37-4c35-8603-9c52a972c521" config-ref="Database_Config">
+				<db:sql ><![CDATA[INSERT INTO USERS
+(
+ACCOUNT_ID,
+NAME,
+PHONE,
+EMAIL,
+USERNAME,
+PASSWORD
+)
+VALUES
+(
+:ACCOUNT_ID,
+:NAME,
+:PHONE,
+:EMAIL,
+:USERNAME,
+:PASSWORD
+)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+  ACCOUNT_ID: vars.accountId,
+  NAME: vars.requestData.name,
+  PHONE: vars.requestData.phone,
+  EMAIL: vars.requestData.email,
+  USERNAME: vars.requestData.username,
+  PASSWORD: vars.requestData.password
+}]]]></db:input-parameters>
+			</db:insert>
+			<logger level="INFO" doc:name="Logger" doc:id="b70052f2-26eb-4883-8e7c-905f6fd46fef" message="users insertion done"/>
+			<db:insert doc:name="ACCOUNTS" doc:id="d0dff944-b5c1-45d3-85be-d9cea2d06360" config-ref="Database_Config">
+				<db:sql ><![CDATA[INSERT INTO ACCOUNTS
+(
+ACCOUNT_ID,
+ACCOUNT_TYPE,
+REWARD_POINTS,
+ACTIVE
+)
+VALUES
+(
+:ACCOUNT_ID,
+:ACCOUNT_TYPE,
+:REWARD_POINTS,
+:ACTIVE
+)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+  ACCOUNT_ID: vars.accountId,
+  ACCOUNT_TYPE: vars.requestData.accountType,
+  REWARD_POINTS: vars.rewardPoints,
+  ACTIVE: "YES"
+}]]]></db:input-parameters>
+			</db:insert>
+			<logger level="INFO" doc:name="Logger" doc:id="c5a04c44-ed85-4446-8d44-009536a91e88" message="accounts insertion done"/>
+		</try>
+	</sub-flow>
+</mule>

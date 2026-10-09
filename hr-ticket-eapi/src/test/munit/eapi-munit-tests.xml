@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="eapi-munit-tests.xml" />
+	<munit:test name="eapi-happy-path">
+
+    <munit:behavior>
+
+        <munit-tools:mock-when
+            processor="http:request">
+
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="invoke-papi"/>
+            </munit-tools:with-attributes>
+
+            <munit-tools:then-return>
+
+                <munit-tools:payload
+                    value='#[%dw 2.0
+output application/json
+---
+{
+    status: "TICKET_CREATED",
+    ticketId: "TKT1001",
+    priority: "CRITICAL",
+    message: "Ticket created successfully"
+}]'
+                    mediaType="application/json"/>
+
+            </munit-tools:then-return>
+
+        </munit-tools:mock-when>
+
+    </munit:behavior>
+
+    <munit:execution>
+
+        <munit:set-event>
+
+            <munit:payload
+                value='#[%dw 2.0
+output application/json
+---
+{
+    employeeId: "EMP001",
+    department: "HR",
+    issueType: "Payroll",
+    description: "Salary not credited this month"
+}]'
+                mediaType="application/json"/>
+
+        </munit:set-event>
+
+        <flow-ref
+            name="post:\tickets:application\json:hr-ticket-eapi-config"/>
+
+    </munit:execution>
+
+    <munit:validation>
+
+        <munit-tools:assert-that
+            expression="#[payload.status]"
+            is='#[MunitTools::equalTo("TICKET_CREATED")]'/>
+
+        <munit-tools:assert-that
+            expression="#[payload.priority]"
+            is='#[MunitTools::equalTo("CRITICAL")]'/>
+
+        <munit-tools:verify-call
+            processor="http:request"
+            times="1">
+
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="invoke-papi"/>
+            </munit-tools:with-attributes>
+
+        </munit-tools:verify-call>
+
+    </munit:validation>
+
+</munit:test>
+
+<munit:test
+    name="eapi-error-path"
+    expectedErrorType="HTTP:BAD_REQUEST">
+
+    <munit:behavior>
+
+        <munit-tools:mock-when
+            processor="http:request">
+
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="invoke-papi"/>
+            </munit-tools:with-attributes>
+
+            <munit-tools:then-return>
+
+                <munit-tools:error
+                    typeId="HTTP:BAD_REQUEST"/>
+
+            </munit-tools:then-return>
+
+        </munit-tools:mock-when>
+
+    </munit:behavior>
+
+    <munit:execution>
+
+        <munit:set-event>
+
+            <munit:payload
+                value='#[%dw 2.0
+output application/json
+---
+{
+    employeeId: "EMP001",
+    department: "HR"
+}]'
+                mediaType="application/json"/>
+
+        </munit:set-event>
+
+        <flow-ref
+            name="post:\tickets:application\json:hr-ticket-eapi-config"/>
+
+    </munit:execution>
+
+    <munit:validation>
+
+        <munit-tools:verify-call
+            processor="http:request"
+            times="1">
+
+            <munit-tools:with-attributes>
+                <munit-tools:with-attribute
+                    attributeName="doc:name"
+                    whereValue="invoke-papi"/>
+            </munit-tools:with-attributes>
+
+        </munit-tools:verify-call>
+
+    </munit:validation>
+
+</munit:test>
+	<munit:test name="apikit-router-test" doc:id="ea1731fd-e1ee-4c91-9cb2-d417c3a7d22c" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock apikit router" doc:id="d8bc587e-644e-485f-ad24-67a7aecfc54e" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="APIkit Router" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Flow Referring to apikit router" doc:id="7fb22a59-0123-414a-8184-85141d470c8c" name="hr-ticket-eapi-main"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="5b998f4e-4197-48eb-886b-84737bf9ed6d" is="#[MunitTools::notNullValue()]" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="apikit-console-test" doc:id="e20ab77e-30fd-410e-abdf-a5474c13db35" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock apikit console" doc:id="a7837458-b92b-4e3f-aa7b-529c30c92a52" processor="apikit:console" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="APIkit Console" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow Referring to apikit console" doc:id="9081aa70-d5f8-4c22-90a7-dbedb38def09" name="hr-ticket-eapi-console" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="b8b6a7d8-fb15-4740-aa97-d0ad1f1cd6ab" is="#[MunitTools::notNullValue()]" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

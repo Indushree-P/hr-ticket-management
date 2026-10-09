@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+    <flow name="hr-ticket-eapi-main" doc:id="4cd4b0b5-bcae-45bf-9910-2ea36c710d1d">
+        <http:listener doc:name="Listener" doc:id="2f983623-ca60-4f77-90ec-91e29523342f" config-ref="hr-ticket-eapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router doc:name="APIkit Router" doc:id="3d3267cd-61ff-42b1-8292-9d39f11a4fe9" config-ref="hr-ticket-eapi-config" />
+    </flow>
+    <flow name="hr-ticket-eapi-console" doc:id="61454ad9-caea-4452-88f9-ca914827d996">
+        <http:listener doc:name="Listener" doc:id="44cf06dc-b511-4235-8782-b5fb9fb3d81a" config-ref="hr-ticket-eapi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console doc:name="APIkit Console" doc:id="35e5965a-a87f-441b-a6be-d6b62a6c33ae" config-ref="hr-ticket-eapi-config" />
+    </flow>
+</mule>

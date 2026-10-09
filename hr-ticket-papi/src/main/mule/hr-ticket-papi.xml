@@ -1,181 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
 http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
-http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
     <http:listener-config name="hr-ticket-papi-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8082" />
     </http:listener-config>
-    <apikit:config name="hr-ticket-papi-config" api="resource::a800e192-e208-4c3c-9e10-977416e56127:hr-ticket-papi:1.0.0:raml:zip:hr-ticket-papi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-	<flow name="hr-ticket-papi-main">
-        <http:listener config-ref="hr-ticket-papi-httpListenerConfig" path="/api/*">
-            <http:response statusCode="#[vars.httpStatus default 200]">
-                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
-            </http:response>
-            <http:error-response statusCode="#[vars.httpStatus default 500]">
-                <http:body>#[payload]</http:body>
-                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
-            </http:error-response>
-        </http:listener>
-        <apikit:router config-ref="hr-ticket-papi-config" />
-        <error-handler>
-            <on-error-propagate type="APIKIT:BAD_REQUEST">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Bad request"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-            <on-error-propagate type="APIKIT:NOT_FOUND">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Resource not found"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Method not allowed"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Not acceptable"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Unsupported media type"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Not Implemented"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-        </error-handler>
-    </flow>
-    <flow name="hr-ticket-papi-console">
-        <http:listener config-ref="hr-ticket-papi-httpListenerConfig" path="/console/*">
-            <http:response statusCode="#[vars.httpStatus default 200]">
-                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
-            </http:response>
-            <http:error-response statusCode="#[vars.httpStatus default 500]">
-                <http:body>#[payload]</http:body>
-                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
-            </http:error-response>
-        </http:listener>
-        <apikit:console config-ref="hr-ticket-papi-config" />
-        <error-handler>
-            <on-error-propagate type="APIKIT:NOT_FOUND">
-                <ee:transform doc:name="Transform Message">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Resource not found"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-        </error-handler>
-    </flow>
+    <apikit:config name="hr-ticket-papi-config" api="resource::a800e192-e208-4c3c-9e10-977416e56127:hr-ticket-papi:1.0.1:raml:zip:hr-ticket-papi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="post:\process-ticket:application\json:hr-ticket-papi-config">
 		<set-variable value="#[payload]" doc:name="store-original-request" doc:id="a1753ed7-f38f-440d-a4b3-046f0fa20f6a" variableName="originalRequest"/>
-		<ee:transform doc:name="Transform Message" doc:id="523fa390-094e-4ab2-960c-c5f03b3cba5f" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-    description: payload.description
-}
-]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<http:request method="POST" doc:name="invoke-ai-sapi" doc:id="3eb5a8ee-21e2-4eaf-9976-cce6c79e7ae5" path="/api/ai/priority" config-ref="sapi-http-request-config"/>
-		<set-variable value="#[payload]" doc:name="store-ai-response" doc:id="a9ca2e63-461e-482f-9a69-67e1e54dd261" variableName="aiResponse"/>
-		<ee:transform doc:name="Transform Message" doc:id="d14fe446-b8ba-4c07-a4a4-945056021b1c" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-    ticketId: "TKT-" ++ upper((uuid() replace "-" with "")[0 to 5]),
-    employeeId: vars.originalRequest.employeeId,
-    department: vars.originalRequest.department,
-    issueType: vars.originalRequest.issueType,
-    description: vars.originalRequest.description,
-    sentiment: vars.aiResponse.sentiment,
-    priority: vars.aiResponse.priority
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+		<flow-ref doc:name="Referring to invoking ai sapi" doc:id="0df09143-2317-467c-b2b2-2ba0fd9cc151" name="process-ai-ticket-subflow"/>
 		<set-variable value="#[payload]" doc:name="store-generated-ticket" doc:id="c9c99370-9e3b-4875-93ca-af2a0b98b652" variableName="generatedTicket"/>
 		<choice doc:name="priority-routing-choice" doc:id="32ec46e8-c6f4-4358-834b-8fedbcef7135" >
 			<when expression='#[payload.priority == "CRITICAL"]'>
-				<scatter-gather doc:name="critical-ticket-scatter-gather" doc:id="dd83d583-a40a-42cc-8ba7-2115c6c0148d" >
-					<route >
-						<http:request method="POST" doc:name="invoke-db-sapi" doc:id="6cc73445-b3ec-45f8-b433-ea2abf6b4ad3" config-ref="sapi-http-request-config" path="/api/tickets"/>
-					</route>
-					<route >
-						<http:request method="POST" doc:name="invoke-alert-sapi" doc:id="1fe23016-24e8-49ea-88a7-0c0cef2ee675" config-ref="sapi-http-request-config" path="/api/alerts"/>
-					</route>
-				</scatter-gather>
+				<flow-ref doc:name="Refering to critical-ticket" doc:id="9115f2fc-2c07-42b3-8421-f23285101894" name="critical-ticket-subflow"/>
 			</when>
-			<otherwise >
-				<http:request method="POST" doc:name="invoke-db-sapi-normal" doc:id="f66b338d-6550-4cbb-8d26-b410fbb9aa4f" config-ref="sapi-http-request-config" path="/api/tickets"/>
+			<otherwise>
+				<flow-ref doc:name="Refering to normal-ticket" doc:id="e531c8dd-f930-4dab-ab80-cbe27160c25f" name="normal-ticket-subflow"/>
 			</otherwise>
 		</choice>
 		<vm:publish queueName="audit-queue" doc:name="publish-audit-event" doc:id="85a975f5-62d8-4b0f-b229-75b0a623b112" config-ref="audit-vm-config">
 			<vm:content ><![CDATA[#[vars.generatedTicket]]]></vm:content>
 		</vm:publish>
-		<ee:transform doc:name="Transform Message" doc:id="b71843fe-1272-48b5-8ff8-2cacf7c1af18" >
+		<set-variable variableName="httpStatus" value="201" doc:name="Set Created Status"/>
+		<ee:transform doc:name="prepare-process-ticket-response-tm" doc:id="b71843fe-1272-48b5-8ff8-2cacf7c1af18" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -209,6 +57,7 @@ payload.sentiment ++ "," ++
 payload.description ++ "\n"]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<file:write doc:name="Write" doc:id="dc648453-3573-4d89-b494-e4278ee97e34" path="audit.csv" mode="APPEND" config-ref="audit-file-config"/>
+		<file:write doc:name="LOCAL_WRITE" doc:id="dc648453-3573-4d89-b494-e4278ee97e34" path="${audit.path}" mode="APPEND" config-ref="audit-file-config"/>
+		<sftp:write doc:name="SFTP_WRITE" doc:id="207ece19-46da-4428-b7c4-206816696ccb" config-ref="SFTP_Config" path="/audit.csv" mode="APPEND"/>
 	</flow>
 </mule>

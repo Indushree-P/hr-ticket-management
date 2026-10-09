@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="9c9c3653-b7ba-4bb1-913d-d6467d6a5462" >
+		<http:request-connection protocol="HTTPS" host="${groq.host}" port="${groq.port}" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="2ea9fcae-6171-4ffe-8ee6-683e499ba572" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${secure::db.password}" database="${db.name}" />
+	</db:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="7a8517c4-5503-42f3-9b04-34bdd2fa14d6" >
+		<email:smtps-connection host="${gmail.host}" user="${gmail.user}" password="${secure::gmail.password}" port="${gmail.port}">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</email:smtps-connection>
+	</email:smtp-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="bfa5bb03-cdcd-422d-989f-7fb160759303" file="config-properties.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="b3b0787e-6da8-4c79-9557-c71abfc0b3ec" file="secure-properties-sapi.yaml" key="mulesoft123">
+		<secure-properties:encrypt algorithm="Blowfish"/>
+	</secure-properties:config>
+	<configuration doc:name="Configuration" doc:id="21ab3e5f-e956-4a5f-a856-445a5d5c7c61" defaultErrorHandler-ref="global_error_handler" />
+
+</mule>
