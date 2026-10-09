@@ -20,4 +20,6 @@ jobs:
           java-version: '17'
 
       - name: Build Application
-        run: mvn clean package
+        run: |
+          cd accounts-api
+          mvn clean package
