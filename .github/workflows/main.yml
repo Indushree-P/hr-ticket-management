@@ -16,10 +16,19 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Build Application
+      - name: Setup Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.6
+
+      - name: Verify Versions
         run: |
-          cd accounts-api
-          mvn clean package
+          java -version
+          mvn -version
+
+      - name: Build Mule Application
+        working-directory: ./accounts-api
+        run: mvn clean package
