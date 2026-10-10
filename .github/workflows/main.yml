@@ -28,6 +28,14 @@ jobs:
       - name: Verify Maven
         run: mvn -version
 
+      - name: Check Connected App Secrets
+        run: |
+          echo "CLIENT ID LENGTH: ${#ANYPOINT_CLIENT_ID}"
+          echo "CLIENT SECRET EXISTS: $([ -n "$ANYPOINT_CLIENT_SECRET" ] && echo YES || echo NO)"
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+
       - name: Build Project
         run: mvn clean package -DskipTests --settings ../.github/settings.xml
         env:
