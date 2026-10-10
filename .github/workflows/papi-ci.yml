@@ -1,0 +1,32 @@
+name: PAPI CI
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: hr-ticket-papi
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build Project
+        run: mvn clean package -DskipTests --settings ../.github/settings.xml
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
