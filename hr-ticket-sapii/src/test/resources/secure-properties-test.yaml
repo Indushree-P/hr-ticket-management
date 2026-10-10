@@ -1,8 +1,0 @@
-db:
-  password: dummy
-
-gmail:
-  password: dummy
-
-groq:
-  apiKey: dummy
