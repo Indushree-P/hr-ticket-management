@@ -4,15 +4,11 @@
           https://maven.apache.org/xsd/settings-1.0.0.xsd">
 
     <servers>
-
         <server>
             <id>anypoint-exchange-v3</id>
-
-            <username>${env.ANYPOINT_USERNAME}</username>
-
-            <password>${env.ANYPOINT_PASSWORD}</password>
+            <username>${env.ANYPOINT_CLIENT_ID}</username>
+            <password>${env.ANYPOINT_CLIENT_SECRET}</password>
         </server>
-
     </servers>
 
 </settings>
