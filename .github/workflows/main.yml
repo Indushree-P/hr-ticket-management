@@ -28,8 +28,10 @@ jobs:
       - name: Verify Maven
         run: mvn -version
 
-      - name: Build Project
-        run: mvn clean package -DskipTests --settings ../.github/settings.xml
+      - name: Check Secrets
+        run: |
+          echo "USERNAME LENGTH: ${#ANYPOINT_USERNAME}"
+          echo "PASSWORD EXISTS: $([ -n "$ANYPOINT_PASSWORD" ] && echo YES || echo NO)"
         env:
           ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
           ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
